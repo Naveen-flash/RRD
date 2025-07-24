@@ -1,13 +1,13 @@
 module "eks" {
   source             = "./modules/eks"
-  cluster_name       = "my-private-eks"
-  vpc_id             = "vpc-07fd7d5200ed8fa32"
-  private_subnet_ids = ["subnet-05bc487e3e432df34", "subnet-0d7a4f487d3e685c8"]
-  region             = "us-east-1"
-  node_instance_type = "t2.micro"
+  cluster_name       = "EKS-Cluster"
+  vpc_id             = "vpc-0339bd5c9bbbc717e"
+  private_subnet_ids = ["subnet-086b1c854380f67e2", "subnet-062cb390cb1b318f6"]
+  region             = "ap-south-1"
+  node_instance_type = "t3.medium"
   desired_capacity   = 2
 
-  coredns_version    = "v1.11.1-eksbuild.4"
-  kube_proxy_version = "v1.29.0-eksbuild.1"
-  vpc_cni_version    = "v1.14.1-eksbuild.1"
+  coredns_version    = "v1.12.1-eksbuild.2"
+  kube_proxy_version = "v1.33.0-eksbuild.2"
+  vpc_cni_version    = "v1.19.5-eksbuild.1"
 }
