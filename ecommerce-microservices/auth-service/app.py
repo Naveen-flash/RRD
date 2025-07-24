@@ -1,8 +1,9 @@
-Flask==2.3.3
-PyJWT==2.8.0
-Werkzeug==2.3.7
-root@ip-10-0-5-13:~/naveen/auth-service# cat app.py
 from flask import Flask, request, jsonify, render_template_string, session, redirect, url_for
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import jwt
@@ -29,7 +30,7 @@ def token_required(f):
         token = request.headers.get('Authorization')
         if not token:
             return jsonify({'message': 'Token is missing'}), 401
-
+        
         try:
             if token.startswith('Bearer '):
                 token = token[7:]
@@ -37,7 +38,7 @@ def token_required(f):
             current_user = data['username']
         except:
             return jsonify({'message': 'Token is invalid'}), 401
-
+        
         return f(current_user, *args, **kwargs)
     return decorated
 
@@ -68,7 +69,7 @@ LOGIN_TEMPLATE = """
     {% if success %}
         <div class="success">{{ success }}</div>
     {% endif %}
-
+    
     <form method="POST">
         {% if register %}
         <div class="form-group">
@@ -86,7 +87,7 @@ LOGIN_TEMPLATE = """
         </div>
         <button type="submit">{{ button_text }}</button>
     </form>
-
+    
     <div class="nav">
         {% if register %}
             <a href="/login">Already have an account? Login</a>
@@ -120,12 +121,12 @@ DASHBOARD_TEMPLATE = """
             <button type="submit">Logout</button>
         </form>
     </div>
-
+    
     <div class="token-box">
         <h3>Your JWT Token:</h3>
         <div class="token">{{ token }}</div>
     </div>
-
+    
     <div class="api-info">
         <h3>API Usage:</h3>
         <p><strong>Protected Endpoint:</strong> GET /api/protected</p>
@@ -139,28 +140,38 @@ DASHBOARD_TEMPLATE = """
 # Routes
 @app.route('/')
 def home():
-    if 'username' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    logger.info("Home route accessed")
+    try:
+        if 'username' in session:
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('login'))
+    except Exception as e:
+        logger.error(f"Error in home route: {e}")
+        return f"Error: {e}", 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        if username in users and check_password_hash(users[username]['password'], password):
-            session['username'] = username
-            return redirect(url_for('dashboard'))
-        else:
-            return render_template_string(LOGIN_TEMPLATE,
-                                        title="Login",
-                                        button_text="Login",
-                                        error="Invalid credentials")
-
-    return render_template_string(LOGIN_TEMPLATE,
-                                title="Login",
-                                button_text="Login")
+    logger.info(f"Login route accessed with method: {request.method}")
+    try:
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            
+            if username in users and check_password_hash(users[username]['password'], password):
+                session['username'] = username
+                return redirect(url_for('dashboard'))
+            else:
+                return render_template_string(LOGIN_TEMPLATE, 
+                                            title="Login", 
+                                            button_text="Login",
+                                            error="Invalid credentials")
+        
+        return render_template_string(LOGIN_TEMPLATE, 
+                                    title="Login", 
+                                    button_text="Login")
+    except Exception as e:
+        logger.error(f"Error in login route: {e}")
+        return f"Error: {e}", 500
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -168,26 +179,26 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-
+        
         if username in users:
-            return render_template_string(LOGIN_TEMPLATE,
-                                        title="Register",
+            return render_template_string(LOGIN_TEMPLATE, 
+                                        title="Register", 
                                         button_text="Register",
                                         register=True,
                                         error="Username already exists")
-
+        
         users[username] = {
             'password': generate_password_hash(password),
             'email': email
         }
-
-        return render_template_string(LOGIN_TEMPLATE,
-                                    title="Login",
+        
+        return render_template_string(LOGIN_TEMPLATE, 
+                                    title="Login", 
                                     button_text="Login",
                                     success="Account created! Please login.")
-
-    return render_template_string(LOGIN_TEMPLATE,
-                                title="Register",
+    
+    return render_template_string(LOGIN_TEMPLATE, 
+                                title="Register", 
                                 button_text="Register",
                                 register=True)
 
@@ -195,15 +206,15 @@ def register():
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
-
+    
     username = session['username']
     token = jwt.encode({
         'username': username,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
     }, app.secret_key, algorithm='HS256')
-
-    return render_template_string(DASHBOARD_TEMPLATE,
-                                username=username,
+    
+    return render_template_string(DASHBOARD_TEMPLATE, 
+                                username=username, 
                                 token=token)
 
 @app.route('/logout', methods=['POST'])
@@ -217,22 +228,22 @@ def api_login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-
+    
     if not username or not password:
         return jsonify({'message': 'Username and password required'}), 400
-
+    
     if username in users and check_password_hash(users[username]['password'], password):
         token = jwt.encode({
             'username': username,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }, app.secret_key, algorithm='HS256')
-
+        
         return jsonify({
             'message': 'Login successful',
             'token': token,
             'username': username
         })
-
+    
     return jsonify({'message': 'Invalid credentials'}), 401
 
 @app.route('/api/register', methods=['POST'])
@@ -241,18 +252,18 @@ def api_register():
     username = data.get('username')
     password = data.get('password')
     email = data.get('email')
-
+    
     if not all([username, password, email]):
         return jsonify({'message': 'Username, password, and email required'}), 400
-
+    
     if username in users:
         return jsonify({'message': 'Username already exists'}), 409
-
+    
     users[username] = {
         'password': generate_password_hash(password),
         'email': email
     }
-
+    
     return jsonify({'message': 'User created successfully'}), 201
 
 @app.route('/api/protected')
@@ -285,6 +296,9 @@ if __name__ == '__main__':
             'password': generate_password_hash('admin123'),
             'email': 'admin@example.com'
         }
-
+    
+    logger.info("Starting Flask application...")
+    logger.info(f"Available routes: {[rule.rule for rule in app.url_map.iter_rules()]}")
+    
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
