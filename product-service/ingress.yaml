@@ -8,7 +8,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-    alb.ingress.kubernetes.io/group.name: "auth-service-group"
+    # alb.ingress.kubernetes.io/group.name: "auth-service-group"
     alb.ingress.kubernetes.io/subnets: "subnet-035c5a2b898062ba3,subnet-0810d6ec8ffd05f96"
 spec:
   rules:
