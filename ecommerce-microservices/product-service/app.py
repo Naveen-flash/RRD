@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import os
-import signalimport sys
+import signal
+import sys
 from datetime import datetime
 
 app = Flask(__name__)
@@ -31,63 +32,63 @@ def get_products():
 @app.route('/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
     product = next((p for p in products if p['id'] == product_id), None)
-
+    
     if not product:
         return jsonify({'error': 'Product not found'}), 404
-
+    
     return jsonify(product), 200
 
 # Create new product
 @app.route('/products', methods=['POST'])
 def create_product():
     global next_id
-
+    
     data = request.get_json()
-
+    
     if not data or not all(key in data for key in ['name', 'price', 'category']):
         return jsonify({'error': 'Name, price, and category are required'}), 400
-
+    
     new_product = {
         'id': next_id,
         'name': data['name'],
         'price': float(data['price']),
         'category': data['category']
     }
-
+    
     products.append(new_product)
     next_id += 1
-
+    
     return jsonify(new_product), 201
 
 # Update product
 @app.route('/products/<int:product_id>', methods=['PUT'])
 def update_product(product_id):
     product = next((p for p in products if p['id'] == product_id), None)
-
+    
     if not product:
         return jsonify({'error': 'Product not found'}), 404
-
+    
     data = request.get_json()
-
+    
     if 'name' in data:
         product['name'] = data['name']
     if 'price' in data:
         product['price'] = float(data['price'])
     if 'category' in data:
         product['category'] = data['category']
-
+    
     return jsonify(product), 200
 
 # Delete product
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
     global products
-
+    
     product_index = next((i for i, p in enumerate(products) if p['id'] == product_id), None)
-
+    
     if product_index is None:
         return jsonify({'error': 'Product not found'}), 404
-
+    
     products.pop(product_index)
     return '', 204
 
