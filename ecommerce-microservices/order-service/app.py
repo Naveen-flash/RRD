@@ -136,100 +136,6 @@ def create_sample_orders():
                 "country": "USA"
             },
             "payment_method": "debit_card"
-        },
-        {
-            "customer_id": "customer_001",
-            "items": [
-                {
-                    "product_id": "prod_128",
-                    "name": "USB Cable",
-                    "price": 15.99,
-                    "quantity": 2
-                },
-                {
-                    "product_id": "prod_129",
-                    "name": "Power Bank",
-                    "price": 35.99,
-                    "quantity": 1
-                }
-            ],
-            "shipping_address": {
-                "street": "123 Main St",
-                "city": "New York",
-                "state": "NY",
-                "zip_code": "10001",
-                "country": "USA"
-            },
-            "payment_method": "credit_card"
-        },
-        {
-            "customer_id": "customer_004",
-            "items": [
-                {
-                    "product_id": "prod_130",
-                    "name": "Bluetooth Speaker",
-                    "price": 79.99,
-                    "quantity": 1
-                },
-                {
-                    "product_id": "prod_131",
-                    "name": "Screen Cleaner Kit",
-                    "price": 8.99,
-                    "quantity": 1
-                },
-                {
-                    "product_id": "prod_132",
-                    "name": "Desk Organizer",
-                    "price": 22.50,
-                    "quantity": 1
-                }
-            ],
-            "shipping_address": {
-                "street": "321 Elm St",
-                "city": "Miami",
-                "state": "FL",
-                "zip_code": "33101",
-                "country": "USA"
-            },
-            "payment_method": "apple_pay"
-        },
-        {
-            "customer_id": "customer_005",
-            "items": [
-                {
-                    "product_id": "prod_133",
-                    "name": "Gaming Mouse",
-                    "price": 59.99,
-                    "quantity": 1
-                }
-            ],
-            "shipping_address": {
-                "street": "654 Broadway",
-                "city": "Seattle",
-                "state": "WA",
-                "zip_code": "98101",
-                "country": "USA"
-            },
-            "payment_method": "google_pay"
-        },
-        {
-            "customer_id": "customer_002",
-            "items": [
-                {
-                    "product_id": "prod_134",
-                    "name": "Wireless Charger",
-                    "price": 29.99,
-                    "quantity": 2
-                }
-            ],
-            "shipping_address": {
-                "street": "456 Oak Ave",
-                "city": "Los Angeles",
-                "state": "CA",
-                "zip_code": "90210",
-                "country": "USA"
-            },
-            "payment_method": "paypal"
         }
     ]
 
@@ -246,11 +152,10 @@ def create_sample_orders():
 
     # Update some orders to different statuses for variety
     order_list = list(orders.values())
-    if len(order_list) >= 5:
+    if len(order_list) >= 2:
         order_list[1].update_status(OrderStatus.PROCESSING)
-        order_list[2].update_status(OrderStatus.SHIPPED)
-        order_list[3].update_status(OrderStatus.DELIVERED)
-        order_list[4].update_status(OrderStatus.CANCELLED)
+        if len(order_list) >= 3:
+            order_list[2].update_status(OrderStatus.SHIPPED)
 
     logger.info(f"Created {len(orders)} sample orders with various statuses")
 
@@ -260,7 +165,7 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.datetime.utcnow().isoformat(),
-        'service': 'order-processing-service',
+        'service': 'order-service',
         'version': '1.0.0'
     })
 
@@ -446,6 +351,6 @@ if __name__ == '__main__':
     # Create sample orders when the app starts
     create_sample_orders()
 
-    logger.info(f"Starting Order Processing Service on port {PORT}")
+    logger.info(f"Starting Order Service on port {PORT}")
     logger.info(f"Sample orders created: {len(orders)} orders loaded")
     app.run(host='0.0.0.0', port=PORT, debug=DEBUG)
